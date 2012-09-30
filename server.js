@@ -81,8 +81,8 @@
           self.router.lookup(req.method, req.pathname)(req, res);
         }else{
           // Some response
+          chrome.socket.destroy(tSid);
         }
-        chrome.socket.destroy(tSid);
       });
       self.__accept(sid);
     });
@@ -153,8 +153,6 @@
     this._headers = {};
     this._headerNames = {};
     this.parseHeader(buf);
-
-    console.log(this);
   };
   Request.prototype.parseHeader = function(buf){
     var headers = decodeFromBuffer(buf).split(/\n/);
@@ -228,11 +226,12 @@
   Response.prototype.send = function(body){
     var len = body.length;
     var code = 200;
+    var self = this;
     this.setHeader('Content-Length', len);
 
     var header = this.createHeader(code);
-    console.log([header, body].join(CRLF + CRLF));
     chrome.socket.write(this.req.sid, encodeToBuffer([header, body].join(CRLF + CRLF)), function(writeInfo){
+      chrome.socket.destroy(self.req.sid);
     });
   };
 
